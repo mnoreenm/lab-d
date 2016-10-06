@@ -48,7 +48,7 @@ public class UserDaoJdbcImpl implements UserDao {
 				String email = result.getString("email");
 				String password = result.getString("password");
 
-				users.add(new User(firstName, lastName, email, password));// adding
+				users.add(new User(id,firstName, lastName, email, password));// adding
 																			// users
 																			// inlist
 																			// of
@@ -78,7 +78,7 @@ public class UserDaoJdbcImpl implements UserDao {
 				String email = result.getString("email");
 				String password = result.getString("password");
 
-				users.add(new User(firstName, lastName, email, password));
+				users.add(new User(id,firstName, lastName, email, password));
 			}
 
 			return users;
@@ -101,7 +101,7 @@ public class UserDaoJdbcImpl implements UserDao {
 				String email = result.getString("email");
 				String password = result.getString("password");
 
-				return new User(firstName, lastName, email, password);
+				return new User(id,firstName, lastName, email, password);
 			} else {
 				throw new NotFoundException("No such user.");
 			}
@@ -110,25 +110,30 @@ public class UserDaoJdbcImpl implements UserDao {
 		}
 	}
 
-	/*
-	 * @Override public User getUserByEmailAndPassword(String email, String
-	 * password) { String sql = "SELECT * FROM User WHERE email= ?"; try
-	 * (Connection connection = connectionFactory.getConnection();
-	 * PreparedStatement statement = connection.prepareStatement(sql)) {
-	 * statement.setString(1, email); statement.setString(2, password);
-	 * ResultSet result = statement.executeQuery();
-	 * 
-	 * List<User> users = new ArrayList<User>(); while (result.next()) { Integer
-	 * id = result.getInt("id"); String firstName =
-	 * result.getString("firstName"); String lastName =
-	 * result.getString("lastName"); //String email = result.getString("email");
-	 * //String password = result.getString("password");
-	 * 
-	 * users.add(new Movie(email,password)); }
-	 * 
-	 * return users; } catch (SQLException ex) { throw new RuntimeException(ex);
-	 * } }
-	 */
+	
+	@Override
+	public User getUserByEmailAndPassword(String email, String password) throws NotFoundException {
+		String sql = "SELECT * FROM users WHERE email = ? , password = ? ";
+		try (Connection connection = connectionFactory.getConnection();
+				PreparedStatement statement = connection.prepareStatement(sql)) {
+			statement.setString(1, email);
+			statement.setString(2, password);
+			ResultSet result = statement.executeQuery();
+
+			if (result.next()) {
+				Integer id = result.getInt("id");
+				String firstName = result.getString("firstName");
+				String lastName = result.getString("lastName");
+				
+				return new User(id,firstName,lastName,email,password);
+			} else {
+				throw new NotFoundException("No such user.");
+			}
+		} catch (SQLException ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+	 
 
 	@Override
 	public int addUser(User user) {
@@ -169,7 +174,7 @@ public class UserDaoJdbcImpl implements UserDao {
 			statement.setString(2, user.getLastName());
 			statement.setString(3, user.getEmail());
 			statement.setString(4, user.getPassword());
-
+			statement.setInt(5, user.getId());
 			int rowsUpdated = statement.executeUpdate();
 			if (rowsUpdated != 1) {
 				throw new NotFoundException("No such user");
@@ -195,10 +200,5 @@ public class UserDaoJdbcImpl implements UserDao {
 		}
 	}
 
-	@Override
-	public User getUserByEmailAndPassword(String email, String password) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 }
